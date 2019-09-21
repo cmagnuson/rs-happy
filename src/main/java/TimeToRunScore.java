@@ -29,7 +29,7 @@ public class TimeToRunScore extends ServerDataHandler {
 
     private final static ThreadLocal<SimpleDateFormat> hhmmss100Format = ThreadLocal.withInitial(() -> {
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
-        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+        //sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
         return sdf;
     });
 
@@ -49,7 +49,6 @@ public class TimeToRunScore extends ServerDataHandler {
 
         for (Passing p : passings) {
             String runscoreFormat = passingToRunScoreFormat(p);
-            log.warning("Passing: "+runscoreFormat);
             writer.write(runscoreFormat);
         }
         writer.flush();
@@ -72,6 +71,7 @@ public class TimeToRunScore extends ServerDataHandler {
         }
         catch(NumberFormatException nfe){
             //oops, this is CC or PC.  Leave as is
+            return "RSCI," + chipcodeInt + "," + getFormattedTimeHHMMSS100(p.getTimeMillis()) + "," + p.getLocationName() + "\r\n";
         }
         return "RSBI," + chipcodeInt + "," + getFormattedTimeHHMMSS100(p.getTimeMillis()) + "," + p.getLocationName() + "\r\n";
     }
