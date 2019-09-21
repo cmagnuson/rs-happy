@@ -15,6 +15,7 @@ buildscript {
 }
 plugins {
     id 'com.gladed.androidgitversion' version '0.4.4'
+    id "io.freefair.lombok" version "4.1.0"
 }
 
 apply plugin: 'java'
