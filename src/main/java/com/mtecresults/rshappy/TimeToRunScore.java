@@ -1,7 +1,11 @@
+package com.mtecresults.rshappy;
+
 import com.google.common.base.Charsets;
+import com.google.common.collect.*;
 import com.mtecresults.mylapstcpserver.controller.ServerDataHandler;
 import com.mtecresults.mylapstcpserver.domain.Passing;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.java.Log;
 
 import java.io.BufferedWriter;
@@ -12,8 +16,9 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
+import java.util.Set;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Log
 public class TimeToRunScore extends ServerDataHandler {
@@ -24,6 +29,8 @@ public class TimeToRunScore extends ServerDataHandler {
     private final int socketTimeout;
 
     private final Object socketLocker = new Object();
+    private final SetMultimap<String, String> locationsMap = MultimapBuilder.hashKeys().hashSetValues().build();
+
     private Socket sendSocket;
     private BufferedWriter writer;
 
@@ -48,10 +55,27 @@ public class TimeToRunScore extends ServerDataHandler {
         checkSocket();
 
         for (Passing p : passings) {
-            String runscoreFormat = passingToRunScoreFormat(p);
-            writer.write(runscoreFormat);
+            Set<String> runscoreLocations = getLocationsForPassing(p);
+            for(String runscoreLocation: runscoreLocations) {
+                String runscoreFormat = passingToRunScoreFormat(p, runscoreLocation);
+                writer.write(runscoreFormat);
+            }
         }
         writer.flush();
+    }
+
+    private Set<String> getLocationsForPassing(Passing p){
+        String passingLocation = p.getLocationName();
+        if(!locationsMap.containsKey(passingLocation)){
+            String[] runscoreLocations = passingLocation.split("\\Q-\\E")[0].split("\\Q+\\E");
+            locationsMap.putAll(passingLocation, Lists.newArrayList(runscoreLocations));
+
+            log.info("RunScore Location Mapping Added:");
+            for(String runscoreLocation: runscoreLocations){
+                log.info("\t" + passingLocation + " -> " + runscoreLocation);
+            }
+        }
+        return locationsMap.get(passingLocation);
     }
 
     private void checkSocket() throws IOException {
@@ -64,16 +88,16 @@ public class TimeToRunScore extends ServerDataHandler {
         }
     }
 
-    private String passingToRunScoreFormat(Passing p){
+    private String passingToRunScoreFormat(Passing p, String runscoreLocation){
         String chipcodeInt = p.getChipcode();
         try{
             chipcodeInt  = "" + Integer.valueOf(chipcodeInt);
         }
         catch(NumberFormatException nfe){
             //oops, this is CC or PC.  Leave as is
-            return "RSCI," + chipcodeInt + "," + getFormattedTimeHHMMSS100(p.getTimeMillis()) + "," + p.getLocationName() + "\r\n";
+            return "RSCI," + chipcodeInt + "," + getFormattedTimeHHMMSS100(p.getTimeMillis()) + "," + runscoreLocation + "\r\n";
         }
-        return "RSBI," + chipcodeInt + "," + getFormattedTimeHHMMSS100(p.getTimeMillis()) + "," + p.getLocationName() + "\r\n";
+        return "RSBI," + chipcodeInt + "," + getFormattedTimeHHMMSS100(p.getTimeMillis()) + "," + runscoreLocation + "\r\n";
     }
 
 

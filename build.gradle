@@ -4,6 +4,9 @@ buildscript {
    repositories {
        google()
        jcenter()
+       maven {
+           url 'https://plugins.gradle.org/m2/'
+       }
     }
 
     dependencies {
@@ -11,11 +14,13 @@ buildscript {
         // so we can access Git from our
         // build script.
         classpath 'org.ajoberstar:grgit:1.1.0'
+        classpath 'edu.sc.seis.gradle:launch4j:2.4.4'
     }
 }
 plugins {
     id 'com.gladed.androidgitversion' version '0.4.4'
     id "io.freefair.lombok" version "4.1.0"
+    id 'com.github.johnrengelman.shadow' version '5.0.0'
 }
 
 apply plugin: 'java'
@@ -23,6 +28,7 @@ apply plugin:'application'
 apply plugin: 'pmd'
 apply plugin: 'findbugs'
 apply plugin: 'jacoco'
+apply plugin: 'edu.sc.seis.launch4j'
 
 
 ext {
@@ -48,7 +54,7 @@ def getVersionTag = { ->
 }
 
 
-mainClassName = 'Driver'
+mainClassName = 'com.mtecresults.rshappy.Driver'
 group 'com.mtecresults'
 project.version = getVersionTag()+"-${git.head().abbreviatedId}"
 
@@ -110,9 +116,17 @@ test {
 }
 
 dependencies {
+    implementation 'info.picocli:picocli:3.8.2'
     implementation 'com.google.guava:guava:19.0'
     implementation 'com.github.cmagnuson:mylaps-tcp-server:0.2.9'
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
     testImplementation 'org.jmockit:jmockit:1.39'
+}
+
+launch4j {
+    outfile = "rs-happy.exe"
+    copyConfigurable = project.tasks.shadowJar.outputs.files
+    jar = "lib/${project.tasks.shadowJar.archiveName}"
+    headerType = "console"
 }
