@@ -3,6 +3,7 @@ package com.mtecresults.rshappy;
 import com.google.common.base.Charsets;
 import com.google.common.collect.*;
 import com.mtecresults.mylapstcpserver.controller.ServerDataHandler;
+import com.mtecresults.mylapstcpserver.domain.DataHandlingException;
 import com.mtecresults.mylapstcpserver.domain.Passing;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -41,13 +42,13 @@ public class TimeToRunScore extends ServerDataHandler {
     });
 
     @Override
-    public void handlePassings(Collection<Passing> passings) throws RuntimeException {
+    public void handlePassings(Collection<Passing> passings) throws DataHandlingException {
         log.fine("Send data to: " + runscoreAddress + " Data: " + passings);
         try {
             sendToServer(passings);
         }
         catch(IOException io){
-            throw new RuntimeException(io);
+            throw new DataHandlingException("Error sending to RunScore, probably network drop", io);
         }
     }
 
