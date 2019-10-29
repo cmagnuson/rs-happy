@@ -125,7 +125,7 @@ dependencies {
 }
 
 launch4j {
-    outfile = "rs-happy.exe"
+    outfile = "rs-happy-${project.version}.exe"
     copyConfigurable = project.tasks.shadowJar.outputs.files
     jar = "lib/${project.tasks.shadowJar.archiveName}"
     headerType = "console"
