@@ -1,4 +1,4 @@
-package com.mtecresults.rshappy;
+package com.mtecresults.rshappy.model;
 
 public class Version {
     public static final String BUILD_VERSION = "@BUILDVERSION@";

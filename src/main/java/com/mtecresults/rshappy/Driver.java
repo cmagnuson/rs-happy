@@ -1,8 +1,12 @@
 package com.mtecresults.rshappy;
 
 import com.mtecresults.mylapstcpserver.controller.MyLapsTCPServer;
+import com.mtecresults.rshappy.model.Configuration;
+import com.mtecresults.rshappy.model.Version;
+import com.mtecresults.rshappy.view.GUIConfiguration;
 import lombok.extern.java.Log;
 import picocli.CommandLine;
+
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,22 +31,39 @@ public class Driver implements Callable<Void> {
 	@CommandLine.Option(names = {"--debug"}, description = "Enable Debug Mode")
 	protected boolean debug = false;
 
+	@CommandLine.Option(names = {"--gui"}, description = "Enable GUI Configuration Screen")
+	protected boolean gui = false;
+
 	@Override
 	public Void call() throws Exception {
 		Logger.getGlobal().setLevel(debug ? Level.FINER : Level.INFO);
 		System.setProperty("java.util.logging.SimpleFormatter.format", 
 	            "%1$tF %1$tT %4$s %2$s %5$s%6$s%n");
-				
-		log.info("rs-happy T+S to RunScore running");
-		log.info("Listening for T+S feed on port: "+mylapsPort);
-		log.info("Playing RunScore Open feed to: "+runscoreAddress+":"+runscorePort);
 
-		TimeToRunScore timeToRunScore = new TimeToRunScore(mylapsPort, runscoreAddress, runscorePort, sendTimeoutMS);
+		Configuration configuration = getConfiguration();
+		log.info("rs-happy T+S to RunScore running");
+		log.info("Version: "+ Version.BUILD_VERSION + " " + Version.BUILD_DATE);
+		if(debug){
+			log.info("Debug mode is enabled");
+		}
+		if(gui){
+			log.info("GUI screen enabled");
+			configuration = GUIConfiguration.run(configuration);
+			if(configuration == null){
+				log.info("Startup canceled in GUI configuration screen");
+				System.exit(0);
+			}
+		}
+
+		TimeToRunScore timeToRunScore = TimeToRunScore.create(configuration);
 		new MyLapsTCPServer(timeToRunScore);
 
 		return null;
 	}
 
+	private Configuration getConfiguration() {
+		return new Configuration(mylapsPort, runscoreAddress, runscorePort, sendTimeoutMS);
+	}
 	public static void main(String[] args) {
 		CommandLine.call(new Driver(), args);
 	}

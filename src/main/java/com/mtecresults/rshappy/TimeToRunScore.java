@@ -5,6 +5,7 @@ import com.google.common.collect.*;
 import com.mtecresults.mylapstcpserver.controller.ServerDataHandler;
 import com.mtecresults.mylapstcpserver.domain.DataHandlingException;
 import com.mtecresults.mylapstcpserver.domain.Passing;
+import com.mtecresults.rshappy.model.Configuration;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.java.Log;
@@ -34,6 +35,13 @@ public class TimeToRunScore extends ServerDataHandler {
 
     private Socket sendSocket;
     private BufferedWriter writer;
+
+    public static TimeToRunScore create(final Configuration configuration){
+        log.info("Listening for T+S feed on port: "+configuration.getMylapsPort());
+        log.info("Playing RunScore Open feed to: "+configuration.getRunscoreAddress()+":"+configuration.getRunscorePort());
+
+        return new TimeToRunScore(configuration.getMylapsPort(), configuration.getRunscoreAddress(), configuration.getRunscorePort(), configuration.getSendTimeoutMS());
+    }
 
     private final static ThreadLocal<SimpleDateFormat> hhmmss100Format = ThreadLocal.withInitial(() -> {
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
