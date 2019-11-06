@@ -18,6 +18,7 @@ buildscript {
         // build script.
         classpath 'org.ajoberstar:grgit:1.1.0'
         classpath 'edu.sc.seis.gradle:launch4j:2.4.4'
+        classpath 'gradle.plugin.de.fntsoftware.gradle:markdown-to-pdf:1.1.0'
     }
 }
 plugins {
@@ -32,7 +33,7 @@ apply plugin: 'pmd'
 apply plugin: 'findbugs'
 apply plugin: 'jacoco'
 apply plugin: 'edu.sc.seis.launch4j'
-
+apply plugin: 'de.fntsoftware.gradle.markdown-to-pdf'
 
 ext {
     // Open the Git repository in the current directory.
@@ -149,4 +150,18 @@ launch4j {
     jar = "lib/${project.tasks.shadowJar.archiveName}"
     headerType = "console"
     cmdLine = "--gui"
+}
+
+def getMarkdownFileName(File file){
+    return file.getName().substring(0, file.getName().length()-3);
+}
+
+task buildDoc {
+    fileTree('doc').include('*.md').each { File file ->
+        def pdfize = tasks.create([name: "$file.name PDF", type: de.fntsoftware.gradle.MarkdownToPdfTask], {
+            inputFile = file;
+            outputFile = 'build/doc/' + getMarkdownFileName(file) + ".pdf"
+        })
+        dependsOn(pdfize)
+    }
 }
